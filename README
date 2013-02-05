@@ -1,0 +1,8 @@
+==================================================================================
+Note: for details about the I2Cdev project, please visit: http://www.i2cdevlib.com
+      for details about ChibiOS, please visit: http://www.chibios.org
+==================================================================================
+
+This is a partial conversion of the popular I2Cdev Arduino I2C library and MPU6050 sensor class to ChibiOS. Feel free to use it, but consider it as HIGHLY EXPERIMENTAL as this is the first release.
+Please report bugs or patches if needed.
+

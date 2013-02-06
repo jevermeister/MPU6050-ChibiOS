@@ -1,4 +1,4 @@
-// I2Cdev library collection - MPU6050 I2C device class
+// I2Cdev library collection - MPU6050 I2C device class header file
 // Based on InvenSense MPU-6050 register map document rev. 2.0, 5/19/2011 (RM-MPU-6000A-00)
 // 10/3/2011 by Jeff Rowberg <jeff@rowberg.net>
 // Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
@@ -12,8 +12,6 @@
 
 /* ChibiOS I2Cdev MPU6050 device class conversion 2/5/2013 by Jan Schlemminger - C conversion, ChibiOS compliance
  * First release. I just tested a few functions so this should be considered HIGHLY EXPERIMENTAL!!!
- * Especially the functions related to MPUwriteMemoryBlock are currently untested.
- * 
  * Feel free to test and report bugs. Updates at https://github.com/jevermeister/MPU6050-ChibiOS
 */
 
@@ -3017,6 +3015,7 @@ bool_t MPUwriteMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank,
             MPUsetMemoryStartAddress(address);
             I2CdevreadBytes(MPUdevAddr, MPU6050_RA_MEM_R_W, chunkSize, MPUverifyBuffer, I2CDEV_DEFAULT_READ_TIMEOUT);
             if (MPUmemcmp((uint8_t *)data + i, MPUverifyBuffer, chunkSize) != 0) {
+								//chprintf((BaseChannel *)&SD2, "******** verify error! ********");
                 return FALSE; // uh oh.
             }
         }

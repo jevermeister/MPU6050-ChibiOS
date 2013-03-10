@@ -50,7 +50,11 @@ THE SOFTWARE.
 
 #include "ch.h"
 #include "hal.h"
+#include "chprintf.h"
 #include "i2cdev_chibi.h"
+
+//for memcpy
+#include <string.h>
 
 /** Read a single bit from an 8-bit device register.
  * @param devAddr I2C slave device address
@@ -164,23 +168,18 @@ int8_t I2CdevreadWord(uint8_t devAddr, uint8_t regAddr, uint16_t *data, uint16_t
  * @return Number of bytes read (-1 indicates failure)
  */
 int8_t I2CdevreadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout) {
-	uint8_t mpu_txbuf[1], mpu_rxbuf[I2CDEV_BUFFER_LENGTH], i;
+	//uint8_t mpu_txbuf[1], mpu_rxbuf[I2CDEV_BUFFER_LENGTH], i;
 	msg_t rdymsg;
 	if(length > I2CDEV_BUFFER_LENGTH) {
+		chprintf((BaseChannel *)&SD2,"ERROR readBytes: length > I2CDEV BUFFERLENGTH\n");
 		return FALSE;
-	}
-	mpu_txbuf[0] = regAddr;
-	for(i=0;i<length;i++) {
-		mpu_rxbuf[i] = 0x00;
 	}
 	i2cAcquireBus(&I2C_MPU);
-	rdymsg = i2cMasterTransmitTimeout(&I2C_MPU, devAddr, mpu_txbuf, 1, mpu_rxbuf, length, MS2ST(timeout));
+	rdymsg = i2cMasterTransmitTimeout(&I2C_MPU, devAddr, &regAddr, 1, data, length, MS2ST(timeout));
 	i2cReleaseBus(&I2C_MPU);
 	if(rdymsg == RDY_TIMEOUT || rdymsg == RDY_RESET) {
+		chprintf((BaseChannel *)&SD2,"I2C ERROR: %d\n", i2cGetErrors(&I2CD1));
 		return FALSE;
-	}
-	for(i=0;i<length;i++) {
-		data[i] = mpu_rxbuf[i];
 	}
 	return TRUE;
 }
@@ -329,15 +328,15 @@ bool_t I2CdevwriteWord(uint8_t devAddr, uint8_t regAddr, uint16_t data) {
  * @return Status of operation (true = success)
  */
 bool_t I2CdevwriteBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
-	uint8_t mpu_txbuf[I2CDEV_BUFFER_LENGTH], mpu_rxbuf[1], i;
+	uint8_t mpu_txbuf[I2CDEV_BUFFER_LENGTH], mpu_rxbuf[1];
 	msg_t rdymsg;
 	if((length + 1)> I2CDEV_BUFFER_LENGTH) {
+		chprintf((BaseChannel *)&SD2,"ERROR readBytes: length + 1 > I2CDEV BUFFERLENGTH\n");
 		return FALSE;
 	}
 	mpu_txbuf[0] = regAddr;
-	for(i=1;i<length + 1;i++) {
-		mpu_txbuf[i] = data[i-1];
-	}
+	memcpy(mpu_txbuf + sizeof(uint8_t), data, sizeof(uint8_t) * length);
+	
 	i2cAcquireBus(&I2C_MPU);
 	rdymsg = i2cMasterTransmit(&I2C_MPU, devAddr, mpu_txbuf, length + 1, mpu_rxbuf, 0);
 	i2cReleaseBus(&I2C_MPU);

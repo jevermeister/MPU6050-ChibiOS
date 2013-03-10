@@ -45,17 +45,17 @@ THE SOFTWARE.
 #include "i2cdev_chibi.h"
 #include "chprintf.h"
 
-/* needed by writeMemoryBlock, from http://clc-wiki.net/wiki/memcmp#Implementation */
-int MPUmemcmp(const void* s1, const void* s2,size_t n)
-{
-    const unsigned char *p1 = s1, *p2 = s2;
-    while(n--)
-        if( *p1 != *p2 )
-            return *p1 - *p2;
-        else
-            *p1++,*p2++;
-    return 0;
-}
+// for memcmp
+#include <string.h>
+
+/* Global variables, will see how to get rid of them
+*	     
+*/
+uint8_t MPUdevAddr;
+uint8_t MPUbuffer[14];
+			
+uint16_t MPUfifoCount;     	// count of all bytes currently in FIFO
+uint8_t  MPUfifoBuffer[64];	// FIFO storage buffer
 
 /** Default constructor, uses default I2C address.
  * @see MPU6050_DEFAULT_ADDRESS
@@ -2698,6 +2698,7 @@ uint8_t MPUgetFIFOByte() {
 void MPUgetFIFOBytes(uint8_t *data, uint8_t length) {
     I2CdevreadBytes(MPUdevAddr, MPU6050_RA_FIFO_R_W, length, data, I2CDEV_DEFAULT_READ_TIMEOUT);
 }
+
 /** Write byte to FIFO buffer.
  * @see getFIFOByte()
  * @see MPU6050_RA_FIFO_R_W
@@ -3014,7 +3015,7 @@ bool_t MPUwriteMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank,
             MPUsetMemoryBank(bank, FALSE, FALSE);
             MPUsetMemoryStartAddress(address);
             I2CdevreadBytes(MPUdevAddr, MPU6050_RA_MEM_R_W, chunkSize, MPUverifyBuffer, I2CDEV_DEFAULT_READ_TIMEOUT);
-            if (MPUmemcmp((uint8_t *)data + i, MPUverifyBuffer, chunkSize) != 0) {
+            if (memcmp((uint8_t *)data + i, MPUverifyBuffer, chunkSize) != 0) {
 								//chprintf((BaseChannel *)&SD2, "******** verify error! ********");
                 return FALSE; // uh oh.
             }

@@ -360,10 +360,12 @@ bool_t I2CdevwriteWords(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint16
 		return FALSE;
 	}
 	mpu_txbuf[0] = regAddr;
-	for(i=1;i<((length * 2) + 1);i += 2) {
-		mpu_txbuf[i] = (data[i] >> 8) & 0xff;
-		mpu_txbuf[i+1] = data[i] & 0xff;
+	for(i=0;i<(length*2); i += 2)
+	{
+		mpu_txbuf[i+1] = (data[i] >> 8) & 0xff;
+		mpu_txbuf[i+2] = data[i] & 0xff;
 	}
+	
 	i2cAcquireBus(&I2C_MPU);
 	rdymsg = i2cMasterTransmit(&I2C_MPU, devAddr, mpu_txbuf, (length * 2) + 1, mpu_rxbuf, 0);
 	i2cReleaseBus(&I2C_MPU);
